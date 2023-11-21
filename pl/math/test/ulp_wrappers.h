@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
+#define _GNU_SOURCE
 #include <stdbool.h>
 #include <arm_neon.h>
 
