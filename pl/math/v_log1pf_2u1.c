@@ -73,7 +73,7 @@ VPCS_ATTR float32x4_t V_NAME_F1 (log1p) (float32x4_t x)
   if (unlikely (v_any_u32 (special_cases)))
     /* Side-step special lanes so fenv exceptions are not triggered
        inadvertently.  */
-    x = vreinterpretq_f32_u32 (vbicq_u32 (ix, special_cases));
+    x = v_zerofy_f32 (x, special_cases);
 #endif
 
   /* With x + 1 = t * 2^k (where t = m + 1 and k is chosen such that m
@@ -120,9 +120,7 @@ VPCS_ATTR float32x4_t V_NAME_F1 (log1p) (float32x4_t x)
 PL_SIG (V, F, 1, log1p, -0.9, 10.0)
 PL_TEST_ULP (V_NAME_F1 (log1p), 1.53)
 PL_TEST_EXPECT_FENV (V_NAME_F1 (log1p), WANT_SIMD_EXCEPT)
-PL_TEST_INTERVAL (V_NAME_F1 (log1p), 0.0, 0x1p-23, 30000)
-PL_TEST_INTERVAL (V_NAME_F1 (log1p), 0x1p-23, 1, 50000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (log1p), 0.0, 0x1p-23, 30000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (log1p), 0x1p-23, 1, 50000)
 PL_TEST_INTERVAL (V_NAME_F1 (log1p), 1, inf, 50000)
-PL_TEST_INTERVAL (V_NAME_F1 (log1p), -0.0, -0x1p-23, 30000)
-PL_TEST_INTERVAL (V_NAME_F1 (log1p), -0x1p-23, -1, 30000)
 PL_TEST_INTERVAL (V_NAME_F1 (log1p), -1.0, -inf, 1000)

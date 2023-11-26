@@ -67,7 +67,7 @@ float32x4_t VPCS_ATTR V_NAME_F1 (expm1) (float32x4_t x)
   uint32x4_t special
       = vcgeq_u32 (vsubq_u32 (vaddq_u32 (ix, ix), TinyBound), d->thresh);
   if (unlikely (v_any_u32 (special)))
-    x = vreinterpretq_f32_u32 (vbicq_u32 (ix, special));
+    x = v_zerofy_f32 (x, special);
 #else
   /* Handles very large values (+ve and -ve), +/-NaN, +/-Inf.  */
   uint32x4_t special = vcagtq_f32 (x, d->oflow_bound);
@@ -110,8 +110,7 @@ float32x4_t VPCS_ATTR V_NAME_F1 (expm1) (float32x4_t x)
 PL_SIG (V, F, 1, expm1, -9.9, 9.9)
 PL_TEST_ULP (V_NAME_F1 (expm1), 1.02)
 PL_TEST_EXPECT_FENV (V_NAME_F1 (expm1), WANT_SIMD_EXCEPT)
-PL_TEST_INTERVAL (V_NAME_F1 (expm1), 0, 0x1p-23, 1000)
-PL_TEST_INTERVAL (V_NAME_F1 (expm1), -0, -0x1p-23, 1000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (expm1), 0, 0x1p-23, 1000)
 PL_TEST_INTERVAL (V_NAME_F1 (expm1), -0x1p-23, 0x1.5ebc4p+6, 1000000)
 PL_TEST_INTERVAL (V_NAME_F1 (expm1), -0x1p-23, -0x1.9bbabcp+6, 1000000)
 PL_TEST_INTERVAL (V_NAME_F1 (expm1), 0x1.5ebc4p+6, inf, 1000)

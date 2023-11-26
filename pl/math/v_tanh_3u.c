@@ -84,7 +84,7 @@ float64x2_t VPCS_ATTR V_NAME_D1 (tanh) (float64x2_t x)
   /* To trigger fp exceptions correctly, set special lanes to a neutral value.
      They will be fixed up later by the special-case handler.  */
   if (unlikely (v_any_u64 (special)))
-    u = vreinterpretq_f64_u64 (vbicq_u64 (vreinterpretq_u64_f64 (u), special));
+    u = v_zerofy_f64 (u, special);
 #endif
 
   u = vaddq_f64 (u, u);
@@ -101,9 +101,6 @@ float64x2_t VPCS_ATTR V_NAME_D1 (tanh) (float64x2_t x)
 PL_SIG (V, D, 1, tanh, -10.0, 10.0)
 PL_TEST_ULP (V_NAME_D1 (tanh), 2.27)
 PL_TEST_EXPECT_FENV (V_NAME_D1 (tanh), WANT_SIMD_EXCEPT)
-PL_TEST_INTERVAL (V_NAME_D1 (tanh), 0, 0x1p-27, 5000)
-PL_TEST_INTERVAL (V_NAME_D1 (tanh), -0, -0x1p-27, 5000)
-PL_TEST_INTERVAL (V_NAME_D1 (tanh), 0x1p-27, 0x1.241bf835f9d5fp+4, 50000)
-PL_TEST_INTERVAL (V_NAME_D1 (tanh), -0x1p-27, -0x1.241bf835f9d5fp+4, 50000)
-PL_TEST_INTERVAL (V_NAME_D1 (tanh), 0x1.241bf835f9d5fp+4, inf, 1000)
-PL_TEST_INTERVAL (V_NAME_D1 (tanh), -0x1.241bf835f9d5fp+4, -inf, 1000)
+PL_TEST_SYM_INTERVAL (V_NAME_D1 (tanh), 0, 0x1p-27, 5000)
+PL_TEST_SYM_INTERVAL (V_NAME_D1 (tanh), 0x1p-27, 0x1.241bf835f9d5fp+4, 50000)
+PL_TEST_SYM_INTERVAL (V_NAME_D1 (tanh), 0x1.241bf835f9d5fp+4, inf, 1000)

@@ -47,7 +47,7 @@ float32x4_t VPCS_ATTR V_NAME_F1 (sinpi) (float32x4_t x)
 
   /* When WANT_SIMD_EXCEPT = 1, special lanes should be set to 0
      to avoid them under/overflowing and throwing exceptions.  */
-  float32x4_t r = vbslq_f32 (cmp, v_f32 (0), x);
+  float32x4_t r = v_zerofy_f32 (x, cmp);
 #else
   float32x4_t r = x;
 #endif
@@ -75,13 +75,7 @@ float32x4_t VPCS_ATTR V_NAME_F1 (sinpi) (float32x4_t x)
 PL_SIG (V, F, 1, sinpi, -0.9, 0.9)
 PL_TEST_ULP (V_NAME_F1 (sinpi), 2.54)
 PL_TEST_EXPECT_FENV (V_NAME_F1 (sinpi), WANT_SIMD_EXCEPT)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), 0, 0x1p-31, 5000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), -0, -0x1p-31, 5000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), 0x1p-31, 0.5, 10000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), -0x1p-31, -0.5, 10000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), 0.5, 0x1p31f, 10000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), -0.5, -0x1p31f, 10000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), 0x1p31f, inf, 10000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), -0x1p31f, -inf, 10000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), inf, inf, 1)
-PL_TEST_INTERVAL (V_NAME_F1 (sinpi), -inf, -inf, 1)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinpi), 0, 0x1p-31, 5000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinpi), 0x1p-31, 0.5, 10000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinpi), 0.5, 0x1p31f, 10000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinpi), 0x1p31f, inf, 10000)

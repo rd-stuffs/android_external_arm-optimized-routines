@@ -69,7 +69,7 @@ float64x2_t VPCS_ATTR V_NAME_D1 (expm1) (float64x2_t x)
   uint64x2_t special
       = vcgeq_u64 (vsubq_u64 (vaddq_u64 (ix, ix), d->tiny_bound), d->thresh);
   if (unlikely (v_any_u64 (special)))
-    x = vreinterpretq_f64_u64 (vbicq_u64 (ix, special));
+    x = v_zerofy_f64 (x, special);
 #else
   /* Large input, NaNs and Infs.  */
   uint64x2_t special = vcageq_f64 (x, d->oflow_bound);
@@ -113,9 +113,6 @@ float64x2_t VPCS_ATTR V_NAME_D1 (expm1) (float64x2_t x)
 PL_SIG (V, D, 1, expm1, -9.9, 9.9)
 PL_TEST_ULP (V_NAME_D1 (expm1), 1.68)
 PL_TEST_EXPECT_FENV (V_NAME_D1 (expm1), WANT_SIMD_EXCEPT)
-PL_TEST_INTERVAL (V_NAME_D1 (expm1), 0, 0x1p-51, 1000)
-PL_TEST_INTERVAL (V_NAME_D1 (expm1), -0, -0x1p-51, 1000)
-PL_TEST_INTERVAL (V_NAME_D1 (expm1), 0x1p-51, 0x1.62b7d369a5aa9p+9, 100000)
-PL_TEST_INTERVAL (V_NAME_D1 (expm1), -0x1p-51, -0x1.62b7d369a5aa9p+9, 100000)
-PL_TEST_INTERVAL (V_NAME_D1 (expm1), 0x1.62b7d369a5aa9p+9, inf, 100)
-PL_TEST_INTERVAL (V_NAME_D1 (expm1), -0x1.62b7d369a5aa9p+9, -inf, 100)
+PL_TEST_SYM_INTERVAL (V_NAME_D1 (expm1), 0, 0x1p-51, 1000)
+PL_TEST_SYM_INTERVAL (V_NAME_D1 (expm1), 0x1p-51, 0x1.62b7d369a5aa9p+9, 100000)
+PL_TEST_SYM_INTERVAL (V_NAME_D1 (expm1), 0x1.62b7d369a5aa9p+9, inf, 100)

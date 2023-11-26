@@ -57,7 +57,7 @@ float32x4_t VPCS_ATTR V_NAME_F1 (sinh) (float32x4_t x)
 
 #if WANT_SIMD_EXCEPT
   uint32x4_t special = vcgeq_u32 (vsubq_u32 (iax, d->tiny_bound), d->thresh);
-  ax = vreinterpretq_f32_u32 (vbicq_u32 (iax, special));
+  ax = v_zerofy_f32 (ax, special);
 #else
   uint32x4_t special = vcgeq_u32 (iax, d->oflow_bound);
 #endif
@@ -79,9 +79,6 @@ float32x4_t VPCS_ATTR V_NAME_F1 (sinh) (float32x4_t x)
 PL_SIG (V, F, 1, sinh, -10.0, 10.0)
 PL_TEST_ULP (V_NAME_F1 (sinh), 1.76)
 PL_TEST_EXPECT_FENV (V_NAME_F1 (sinh), WANT_SIMD_EXCEPT)
-PL_TEST_INTERVAL (V_NAME_F1 (sinh), 0, 0x2fb504f4, 1000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinh), -0, -0x2fb504f4, 1000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinh), 0x2fb504f4, 0x42b0c0a7, 100000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinh), -0x2fb504f4, -0x42b0c0a7, 100000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinh), 0x42b0c0a7, inf, 1000)
-PL_TEST_INTERVAL (V_NAME_F1 (sinh), -0x42b0c0a7, -inf, 1000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinh), 0, 0x2fb504f4, 1000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinh), 0x2fb504f4, 0x42b0c0a7, 100000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinh), 0x42b0c0a7, inf, 1000)

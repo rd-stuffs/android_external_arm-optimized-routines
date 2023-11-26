@@ -53,7 +53,7 @@ VPCS_ATTR float32x4_t V_NAME_F1 (atanh) (float32x4_t x)
   /* Side-step special cases by setting those lanes to 0, which will trigger no
      exceptions. These will be fixed up later.  */
   if (unlikely (v_any_u32 (special)))
-    ax = vreinterpretq_f32_u32 (vbicq_u32 (iax, special));
+    ax = v_zerofy_f32 (ax, special);
 #else
   uint32x4_t special = vcgeq_u32 (iax, d->one);
 #endif
@@ -69,9 +69,9 @@ VPCS_ATTR float32x4_t V_NAME_F1 (atanh) (float32x4_t x)
 PL_SIG (V, F, 1, atanh, -1.0, 1.0)
 PL_TEST_ULP (V_NAME_F1 (atanh), 2.59)
 PL_TEST_EXPECT_FENV (V_NAME_F1 (atanh), WANT_SIMD_EXCEPT)
-PL_TEST_INTERVAL_C (V_NAME_F1 (atanh), 0, 0x1p-12, 500, 0)
-PL_TEST_INTERVAL_C (V_NAME_F1 (atanh), 0x1p-12, 1, 200000, 0)
-PL_TEST_INTERVAL_C (V_NAME_F1 (atanh), 1, inf, 1000, 0)
-PL_TEST_INTERVAL_C (V_NAME_F1 (atanh), -0, -0x1p-12, 500, 0)
-PL_TEST_INTERVAL_C (V_NAME_F1 (atanh), -0x1p-12, -1, 200000, 0)
-PL_TEST_INTERVAL_C (V_NAME_F1 (atanh), -1, -inf, 1000, 0)
+/* atanh is asymptotic at 1, which is the default control value - have to set
+ -c 0 specially to ensure fp exceptions are triggered correctly (choice of
+ control lane is irrelevant if fp exceptions are disabled).  */
+PL_TEST_SYM_INTERVAL_C (V_NAME_F1 (atanh), 0, 0x1p-12, 500, 0)
+PL_TEST_SYM_INTERVAL_C (V_NAME_F1 (atanh), 0x1p-12, 1, 200000, 0)
+PL_TEST_SYM_INTERVAL_C (V_NAME_F1 (atanh), 1, inf, 1000, 0)

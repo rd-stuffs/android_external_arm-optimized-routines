@@ -105,7 +105,7 @@ float32x4_t V_NAME_F1 (erfc) (float32x4_t x)
      special case handler to fix special lanes later. This is only necessary if
      fenv exceptions are to be triggered correctly.  */
   if (unlikely (v_any_u32 (cmp)))
-    x = vreinterpretq_f32_u32 (vbicq_u32 (ix, cmp));
+    x = v_zerofy_f32 (x, cmp);
 #endif
 
   float32x4_t a = vabsq_f32 (x);
@@ -159,8 +159,7 @@ float32x4_t V_NAME_F1 (erfc) (float32x4_t x)
 
 PL_SIG (V, F, 1, erfc, -4.0, 10.0)
 PL_TEST_ULP (V_NAME_F1 (erfc), 1.14)
-PL_TEST_INTERVAL (V_NAME_F1 (erfc), 0, 0x1p-26, 40000)
-PL_TEST_INTERVAL (V_NAME_F1 (erfc), -0, -0x1p-26, 40000)
+PL_TEST_SYM_INTERVAL (V_NAME_F1 (erfc), 0, 0x1p-26, 40000)
 PL_TEST_INTERVAL (V_NAME_F1 (erfc), 0x1p-26, 10.0625, 40000)
 PL_TEST_INTERVAL (V_NAME_F1 (erfc), -0x1p-26, -4.0, 40000)
 PL_TEST_INTERVAL (V_NAME_F1 (erfc), 10.0625, inf, 40000)
