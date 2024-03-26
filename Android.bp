@@ -143,8 +143,6 @@ cc_library_static {
             ],
             asflags: [
                 "-march=armv8-a+sve",
-                "-D__memset_aarch64=memset",
-                "-D__memrchr_aarch64=memrchr",
             ]
         },
     },
