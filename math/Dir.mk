@@ -1,12 +1,14 @@
 # Makefile fragment - requires GNU make
 #
-# Copyright (c) 2019-2022, Arm Limited.
+# Copyright (c) 2019-2024, Arm Limited.
 # SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
 
 S := $(srcdir)/math
 B := build/math
 
 math-lib-srcs := $(wildcard $(S)/*.[cS])
+math-lib-srcs += $(wildcard $(S)/$(ARCH)/*.[cS])
+
 math-test-srcs := \
 	$(S)/test/mathtest.c \
 	$(S)/test/mathbench.c \
@@ -65,6 +67,8 @@ build/lib/libmathlib.a: $(math-lib-objs)
 
 $(math-host-tools): HOST_LDLIBS += -lm -lmpfr -lmpc
 $(math-tools): LDLIBS += $(math-ldlibs) -lm
+# math-sve-cflags should be empty if WANT_SVE_MATH is not enabled
+$(math-tools): CFLAGS_ALL += $(math-sve-cflags)
 
 build/bin/rtest: $(math-host-objs)
 	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ $^ $(HOST_LDLIBS)
@@ -92,6 +96,9 @@ build/bin/%.sh: $(S)/test/%.sh
 	cp $< $@
 
 math-tests := $(wildcard $(S)/test/testcases/directed/*.tst)
+ifneq ($(WANT_EXP10_TESTS),1)
+math-tests := $(filter-out %exp10.tst, $(math-tests))
+endif
 math-rtests := $(wildcard $(S)/test/testcases/random/*.tst)
 
 check-math-test: $(math-tools)
@@ -101,7 +108,7 @@ check-math-rtest: $(math-host-tools) $(math-tools)
 	cat $(math-rtests) | build/bin/rtest | $(EMULATOR) build/bin/mathtest $(math-testflags)
 
 check-math-ulp: $(math-tools)
-	ULPFLAGS="$(math-ulpflags)" WANT_SIMD_EXCEPT="$(WANT_SIMD_EXCEPT)" build/bin/runulp.sh $(EMULATOR)
+	ULPFLAGS="$(math-ulpflags)" WANT_SIMD_TESTS="$(WANT_SIMD_TESTS)" WANT_SIMD_EXCEPT="$(WANT_SIMD_EXCEPT)" WANT_EXP10_TESTS="$(WANT_EXP10_TESTS)" build/bin/runulp.sh $(EMULATOR)
 
 check-math: check-math-test check-math-rtest check-math-ulp
 
