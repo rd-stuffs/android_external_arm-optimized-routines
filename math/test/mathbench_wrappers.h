@@ -1,18 +1,11 @@
 /*
  * Function wrappers for mathbench.
  *
- * Copyright (c) 2022, Arm Limited.
+ * Copyright (c) 2022-2024, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
-#if WANT_VMATH
-#if __aarch64__
 
-#ifdef __vpcs
-__vpcs static v_float
-xy__vn_powf (v_float x)
-{
-  return __vn_powf (x, x);
-}
+#if WANT_SIMD_TESTS && defined(__vpcs)
 
 __vpcs static v_float
 xy_Z_powf (v_float x)
@@ -20,10 +13,16 @@ xy_Z_powf (v_float x)
   return _ZGVnN4vv_powf (x, x);
 }
 
-__vpcs static v_double
-xy__vn_pow (v_double x)
+__vpcs static v_float
+x_Z_powf (v_float x)
 {
-  return __vn_pow (x, x);
+  return _ZGVnN4vv_powf (x, v_float_dup (23.4));
+}
+
+__vpcs static v_float
+y_Z_powf (v_float x)
+{
+  return _ZGVnN4vv_powf (v_float_dup (2.34), x);
 }
 
 __vpcs static v_double
@@ -31,33 +30,8 @@ xy_Z_pow (v_double x)
 {
   return _ZGVnN2vv_pow (x, x);
 }
-#endif // __vpcs
 
-static v_float
-xy__v_powf (v_float x)
-{
-  return __v_powf (x, x);
-}
-
-static v_double
-xy__v_pow (v_double x)
-{
-  return __v_pow (x, x);
-}
-#endif // __aarch64__
-
-static float
-xy__s_powf (float x)
-{
-  return __s_powf (x, x);
-}
-
-static double
-xy__s_pow (double x)
-{
-  return __s_pow (x, x);
-}
-#endif // WANT_VMATH
+#endif
 
 static double
 xypow (double x)

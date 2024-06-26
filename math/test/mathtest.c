@@ -1,9 +1,10 @@
 /*
  * mathtest.c - test rig for mathlib
  *
- * Copyright (c) 1998-2022, Arm Limited.
+ * Copyright (c) 1998-2024, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
+/* clang-format off */
 
 #include <assert.h>
 #include <stdio.h>
@@ -254,6 +255,9 @@ test_func tfuncs[] = {
     TFUNCARM(at_s,rt_s, expf, 3*ULPUNIT/4),
     TFUNCARM(at_s,rt_s, exp2f, 3*ULPUNIT/4),
     TFUNC(at_s,rt_s, expm1f, ULPUNIT),
+#if WANT_EXP10_TESTS
+    TFUNC(at_d,rt_d, exp10, ULPUNIT),
+#endif
 
     /* power */
     TFUNC(at_d2,rt_d, pow, 3*ULPUNIT/4),
@@ -1021,6 +1025,7 @@ int runtest(testdetail t) {
     DO_DOP(d_arg1,op1r);
     DO_DOP(d_arg2,op2r);
     s_arg1.i = t.op1r[0]; s_arg2.i = t.op2r[0];
+    s_res.i = 0;
 
     /*
      * Detect NaNs, infinities and denormals on input, and set a
@@ -1155,22 +1160,25 @@ int runtest(testdetail t) {
             tresultr[0] = t.resultr[0];
             tresultr[1] = t.resultr[1];
             resultr[0] = d_res.i[dmsd]; resultr[1] = d_res.i[dlsd];
+            resulti[0] = resulti[1] = 0;
             wres = 2;
             break;
         case rt_i:
             tresultr[0] = t.resultr[0];
             resultr[0] = intres;
+            resulti[0] = 0;
             wres = 1;
             break;
         case rt_s:
         case rt_s2:
             tresultr[0] = t.resultr[0];
             resultr[0] = s_res.i;
+            resulti[0] = 0;
             wres = 1;
             break;
         default:
             puts("unhandled rettype in runtest");
-            wres = 0;
+            abort ();
         }
         if(t.resultc != rc_none) {
             int err = 0;
@@ -1702,3 +1710,4 @@ void undef_func() {
     failed++;
     puts("ERROR: undefined function called");
 }
+/* clang-format on */
