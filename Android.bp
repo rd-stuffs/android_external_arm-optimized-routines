@@ -39,6 +39,9 @@ cc_defaults {
         "-DWANT_ERRNO=0",
         // TODO: we may want the vector code in future, but it's not ready yet.
         "-DWANT_VMATH=0",
+        // Disable tests for routines that are not available.
+        "-DWANT_SIMD_TESTS=0",
+        "-DWANT_EXP10_TESTS=0",
     ],
     local_include_dirs: ["math/include"],
 }
