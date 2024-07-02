@@ -173,7 +173,7 @@ cc_library_static {
             ],
             asflags: [
                 "-march=armv8-a+sve",
-            ]
+            ],
         },
     },
 }
