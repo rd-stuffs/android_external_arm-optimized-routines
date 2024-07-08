@@ -46,6 +46,16 @@ cc_defaults {
         "-DWANT_MOPS=1",
     ],
     local_include_dirs: ["math/include"],
+    arch: {
+        arm64: {
+            oryon: {
+                cflags: [
+                    "-Xclang -target-feature",
+                    "-Xclang +ldp-aligned-only",
+                ],
+            },
+        },
+    },
 }
 
 cc_defaults {
