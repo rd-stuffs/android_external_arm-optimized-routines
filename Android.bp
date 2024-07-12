@@ -41,6 +41,16 @@ cc_defaults {
         "-DWANT_VMATH=0",
     ],
     local_include_dirs: ["math/include"],
+    arch: {
+        arm64: {
+            oryon: {
+                cflags: [
+                    "-Xclang -target-feature",
+                    "-Xclang +ldp-aligned-only",
+                ],
+            },
+        },
+    },
 }
 
 cc_defaults {
