@@ -43,6 +43,16 @@ cc_defaults {
         "-Xclang +ldp-aligned-only",
     ],
     local_include_dirs: ["math/include"],
+    arch: {
+        arm64: {
+            oryon: {
+                cflags: [
+                    "-Xclang -target-feature",
+                    "-Xclang +ldp-aligned-only",
+                ],
+            },
+        },
+    },
 }
 
 cc_defaults {
