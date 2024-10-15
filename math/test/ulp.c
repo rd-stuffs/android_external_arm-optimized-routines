@@ -1,10 +1,11 @@
 /*
  * ULP error checking tool for math functions.
  *
- * Copyright (c) 2019-2022, Arm Limited.
+ * Copyright (c) 2019-2024, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
+#define _GNU_SOURCE
 #include <ctype.h>
 #include <fenv.h>
 #include <float.h>
@@ -21,11 +22,6 @@
 #endif
 #if USE_MPFR
 # include <mpfr.h>
-#endif
-
-#ifndef WANT_VMATH
-/* Enable the build of vector math code.  */
-# define WANT_VMATH 1
 #endif
 
 static inline uint64_t
@@ -202,25 +198,13 @@ next_d2 (void *g)
   return (struct args_d2){asdouble (x), asdouble (x2)};
 }
 
-struct conf
-{
-  int r;
-  int rc;
-  int quiet;
-  int mpfr;
-  int fenv;
-  unsigned long long n;
-  double softlim;
-  double errlim;
-};
-
 /* A bit of a hack: call vector functions twice with the same
    input in lane 0 but a different value in other lanes: once
    with an in-range value and then with a special case value.  */
 static int secondcall;
 
 /* Wrappers for vector functions.  */
-#if __aarch64__ && WANT_VMATH
+#ifdef __vpcs
 typedef __f32x4_t v_float;
 typedef __f64x2_t v_double;
 /* First element of fv and dv may be changed by -c argument.  */
@@ -249,54 +233,55 @@ static inline sv_double svargd(double x) {
 	base[n-1] = dv[secondcall];
 	return svld1(svptrue_b64(), base);
 }
-static inline float svretf(sv_float vec)  {
-	int n = svcntw();
-	float res[n];
-	svst1(svptrue_b32(), res, vec);
-	return res[0];
+static inline float
+svretf (sv_float vec, svbool_t pg)
+{
+  return svlastb_f32 (svpfirst (pg, svpfalse ()), vec);
 }
-static inline double svretd(sv_double vec) {
-	int n = svcntd();
-	double res[n];
-	svst1(svptrue_b64(), res, vec);
-	return res[0];
+static inline double
+svretd (sv_double vec, svbool_t pg)
+{
+  return svlastb_f64 (svpfirst (pg, svpfalse ()), vec);
 }
-#endif
+
+static inline svbool_t
+parse_pg (uint64_t p, int is_single)
+{
+  if (is_single)
+    {
+      uint32_t tmp[svcntw ()];
+      for (unsigned i = 0; i < svcntw (); i++)
+	tmp[i] = (p >> i) & 1;
+      return svcmpne (svptrue_b32 (), svld1 (svptrue_b32 (), tmp), 0);
+    }
+  else
+    {
+      uint64_t tmp[svcntd ()];
+      for (unsigned i = 0; i < svcntd (); i++)
+	tmp[i] = (p >> i) & 1;
+      return svcmpne (svptrue_b64 (), svld1 (svptrue_b64 (), tmp), 0);
+    }
+}
+# endif
 #endif
 
+struct conf
+{
+  int r;
+  int rc;
+  int quiet;
+  int mpfr;
+  int fenv;
+  unsigned long long n;
+  double softlim;
+  double errlim;
+  int ignore_zero_sign;
 #if WANT_SVE_MATH
-long double
-dummyl (long double x)
-{
-  return x;
-}
-
-double
-dummy (double x)
-{
-  return x;
-}
-
-static sv_double
-__sv_dummy (sv_double x)
-{
-  return x;
-}
-
-static sv_float
-__sv_dummyf (sv_float x)
-{
-  return x;
-}
+  svbool_t *pg;
 #endif
+};
 
 #include "test/ulp_wrappers.h"
-
-/* Wrappers for SVE functions.  */
-#if WANT_SVE_MATH
-static double sv_dummy (double x) { return svretd (__sv_dummy (svargd (x))); }
-static float sv_dummyf (float x) { return svretf (__sv_dummyf (svargf (x))); }
-#endif
 
 struct fun
 {
@@ -304,12 +289,19 @@ struct fun
   int arity;
   int singleprec;
   int twice;
+  int is_predicated;
   union
   {
     float (*f1) (float);
     float (*f2) (float, float);
     double (*d1) (double);
     double (*d2) (double, double);
+#if WANT_SVE_MATH
+    float (*f1_pred) (svbool_t, float);
+    float (*f2_pred) (svbool_t, float, float);
+    double (*d1_pred) (svbool_t, double);
+    double (*d2_pred) (svbool_t, double, double);
+#endif
   } fun;
   union
   {
@@ -329,66 +321,48 @@ struct fun
 #endif
 };
 
+// clang-format off
 static const struct fun fun[] = {
 #if USE_MPFR
-# define F(x, x_wrap, x_long, x_mpfr, a, s, t, twice) \
-  {#x, a, s, twice, {.t = x_wrap}, {.t = x_long}, {.t = x_mpfr}},
+#  define F(x, x_wrap, x_long, x_mpfr, a, s, t, twice)                        \
+    { #x, a, s, twice, 0, { .t = x_wrap }, { .t = x_long }, { .t = x_mpfr } },
+#  define SVF(x, x_wrap, x_long, x_mpfr, a, s, t, twice)                      \
+    { #x, a, s, twice, 1, { .t##_pred = x_wrap }, { .t = x_long }, { .t = x_mpfr } },
 #else
-# define F(x, x_wrap, x_long, x_mpfr, a, s, t, twice) \
-  {#x, a, s, twice, {.t = x_wrap}, {.t = x_long}},
+#  define F(x, x_wrap, x_long, x_mpfr, a, s, t, twice)                        \
+    { #x, a, s, twice, 0, { .t = x_wrap }, { .t = x_long } },
+#  define SVF(x, x_wrap, x_long, x_mpfr, a, s, t, twice)                      \
+    { #x, a, s, twice, 1, { .t##_pred = x_wrap }, { .t = x_long } },
 #endif
 #define F1(x) F (x##f, x##f, x, mpfr_##x, 1, 1, f1, 0)
 #define F2(x) F (x##f, x##f, x, mpfr_##x, 2, 1, f2, 0)
 #define D1(x) F (x, x, x##l, mpfr_##x, 1, 0, d1, 0)
 #define D2(x) F (x, x, x##l, mpfr_##x, 2, 0, d2, 0)
 /* Neon routines.  */
-#define VF1(x) F (__v_##x##f, v_##x##f, x, mpfr_##x, 1, 1, f1, 0)
-#define VF2(x) F (__v_##x##f, v_##x##f, x, mpfr_##x, 2, 1, f2, 0)
-#define VD1(x) F (__v_##x, v_##x, x##l, mpfr_##x, 1, 0, d1, 0)
-#define VD2(x) F (__v_##x, v_##x, x##l, mpfr_##x, 2, 0, d2, 0)
-#define VNF1(x) F (__vn_##x##f, vn_##x##f, x, mpfr_##x, 1, 1, f1, 0)
-#define VNF2(x) F (__vn_##x##f, vn_##x##f, x, mpfr_##x, 2, 1, f2, 0)
-#define VND1(x) F (__vn_##x, vn_##x, x##l, mpfr_##x, 1, 0, d1, 0)
-#define VND2(x) F (__vn_##x, vn_##x, x##l, mpfr_##x, 2, 0, d2, 0)
-#define ZVF1(x) F (_ZGVnN4v_##x##f, Z_##x##f, x, mpfr_##x, 1, 1, f1, 0)
-#define ZVF2(x) F (_ZGVnN4vv_##x##f, Z_##x##f, x, mpfr_##x, 2, 1, f2, 0)
-#define ZVD1(x) F (_ZGVnN2v_##x, Z_##x, x##l, mpfr_##x, 1, 0, d1, 0)
-#define ZVD2(x) F (_ZGVnN2vv_##x, Z_##x, x##l, mpfr_##x, 2, 0, d2, 0)
-#define ZVNF1(x) VNF1 (x) ZVF1 (x)
-#define ZVNF2(x) VNF2 (x) ZVF2 (x)
-#define ZVND1(x) VND1 (x) ZVD1 (x)
-#define ZVND2(x) VND2 (x) ZVD2 (x)
-#define SF1(x) F (__s_##x##f, __s_##x##f, x, mpfr_##x, 1, 1, f1, 0)
-#define SF2(x) F (__s_##x##f, __s_##x##f, x, mpfr_##x, 2, 1, f2, 0)
-#define SD1(x) F (__s_##x, __s_##x, x##l, mpfr_##x, 1, 0, d1, 0)
-#define SD2(x) F (__s_##x, __s_##x, x##l, mpfr_##x, 2, 0, d2, 0)
+#define ZVNF1(x) F (_ZGVnN4v_##x##f, Z_##x##f, x, mpfr_##x, 1, 1, f1, 0)
+#define ZVNF2(x) F (_ZGVnN4vv_##x##f, Z_##x##f, x, mpfr_##x, 2, 1, f2, 0)
+#define ZVND1(x) F (_ZGVnN2v_##x, Z_##x, x##l, mpfr_##x, 1, 0, d1, 0)
+#define ZVND2(x) F (_ZGVnN2vv_##x, Z_##x, x##l, mpfr_##x, 2, 0, d2, 0)
 /* SVE routines.  */
-#define SVF1(x) F (__sv_##x##f, sv_##x##f, x, mpfr_##x, 1, 1, f1, 0)
-#define SVF2(x) F (__sv_##x##f, sv_##x##f, x, mpfr_##x, 2, 1, f2, 0)
-#define SVD1(x) F (__sv_##x, sv_##x, x##l, mpfr_##x, 1, 0, d1, 0)
-#define SVD2(x) F (__sv_##x, sv_##x, x##l, mpfr_##x, 2, 0, d2, 0)
-#define ZSVF1(x) F (_ZGVsMxv_##x##f, Z_sv_##x##f, x, mpfr_##x, 1, 1, f1, 0)
-#define ZSVF2(x) F (_ZGVsMxvv_##x##f, Z_sv_##x##f, x, mpfr_##x, 2, 1, f2, 0)
-#define ZSVD1(x) F (_ZGVsMxv_##x, Z_sv_##x, x##l, mpfr_##x, 1, 0, d1, 0)
-#define ZSVD2(x) F (_ZGVsMxvv_##x, Z_sv_##x, x##l, mpfr_##x, 2, 0, d2, 0)
+#define ZSVF1(x) SVF (_ZGVsMxv_##x##f, Z_sv_##x##f, x, mpfr_##x, 1, 1, f1, 0)
+#define ZSVF2(x) SVF (_ZGVsMxvv_##x##f, Z_sv_##x##f, x, mpfr_##x, 2, 1, f2, 0)
+#define ZSVD1(x) SVF (_ZGVsMxv_##x, Z_sv_##x, x##l, mpfr_##x, 1, 0, d1, 0)
+#define ZSVD2(x) SVF (_ZGVsMxvv_##x, Z_sv_##x, x##l, mpfr_##x, 2, 0, d2, 0)
 
 #include "test/ulp_funcs.h"
-
-#if WANT_SVE_MATH
- SVD1 (dummy)
- SVF1 (dummy)
-#endif
 
 #undef F
 #undef F1
 #undef F2
 #undef D1
 #undef D2
-#undef SVF1
-#undef SVF2
-#undef SVD1
-#undef SVD2
- {0}};
+#undef ZSVF1
+#undef ZSVF2
+#undef ZSVD1
+#undef ZSVD2
+  { 0 }
+};
+// clang-format on
 
 /* Boilerplate for generic calls.  */
 
@@ -409,24 +383,40 @@ ulpscale_d (double x)
   return e - 0x3ff - 52;
 }
 static inline float
-call_f1 (const struct fun *f, struct args_f1 a)
+call_f1 (const struct fun *f, struct args_f1 a, const struct conf *conf)
 {
+#if WANT_SVE_MATH
+  if (f->is_predicated)
+    return f->fun.f1_pred (*conf->pg, a.x);
+#endif
   return f->fun.f1 (a.x);
 }
 static inline float
-call_f2 (const struct fun *f, struct args_f2 a)
+call_f2 (const struct fun *f, struct args_f2 a, const struct conf *conf)
 {
+#if WANT_SVE_MATH
+  if (f->is_predicated)
+    return f->fun.f2_pred (*conf->pg, a.x, a.x2);
+#endif
   return f->fun.f2 (a.x, a.x2);
 }
 
 static inline double
-call_d1 (const struct fun *f, struct args_d1 a)
+call_d1 (const struct fun *f, struct args_d1 a, const struct conf *conf)
 {
+#if WANT_SVE_MATH
+  if (f->is_predicated)
+    return f->fun.d1_pred (*conf->pg, a.x);
+#endif
   return f->fun.d1 (a.x);
 }
 static inline double
-call_d2 (const struct fun *f, struct args_d2 a)
+call_d2 (const struct fun *f, struct args_d2 a, const struct conf *conf)
 {
+#if WANT_SVE_MATH
+  if (f->is_predicated)
+    return f->fun.d2_pred (*conf->pg, a.x, a.x2);
+#endif
   return f->fun.d2 (a.x, a.x2);
 }
 static inline double
@@ -628,17 +618,23 @@ call_mpfr_d2 (mpfr_t y, const struct fun *f, struct args_d2 a, mpfr_rnd_t r)
 static void
 usage (void)
 {
-  puts ("./ulp [-q] [-m] [-f] [-r nudz] [-l soft-ulplimit] [-e ulplimit] func "
+  puts ("./ulp [-q] [-m] [-f] [-r {n|u|d|z}] [-l soft-ulplimit] [-e ulplimit] func "
 	"lo [hi [x lo2 hi2] [count]]");
   puts ("Compares func against a higher precision implementation in [lo; hi].");
   puts ("-q: quiet.");
   puts ("-m: use mpfr even if faster method is available.");
-  puts ("-f: disable fenv testing (rounding modes and exceptions).");
-#if __aarch64__ && WANT_VMATH
+  puts ("-f: disable fenv exceptions testing.");
+#ifdef ___vpcs
   puts ("-c: neutral 'control value' to test behaviour when one lane can affect another. \n"
 	"    This should be different from tested input in other lanes, and non-special \n"
 	"    (i.e. should not trigger fenv exceptions). Default is 1.");
 #endif
+#if WANT_SVE_MATH
+  puts ("-p: integer input for controlling predicate passed to SVE function. "
+	"If bit N is set, lane N is activated (bits past the vector length "
+	"are ignored). Default is UINT64_MAX (ptrue).");
+#endif
+  puts ("-z: ignore sign of 0.");
   puts ("Supported func:");
   for (const struct fun *f = fun; f->name; f++)
     printf ("\t%s\n", f->name);
@@ -676,9 +672,21 @@ getnum (const char *s, int singleprec)
       sign = singleprec ? 1ULL << 31 : 1ULL << 63;
       s++;
     }
+
+  /* Sentinel value for failed parse.  */
+  char *should_not_be_s = NULL;
+
   /* 0xXXXX is treated as bit representation, '-' flips the sign bit.  */
   if (s[0] == '0' && tolower (s[1]) == 'x' && strchr (s, 'p') == 0)
-    return sign ^ strtoull (s, 0, 0);
+    {
+      uint64_t out = sign ^ strtoull (s, &should_not_be_s, 0);
+      if (should_not_be_s == s)
+	{
+	  printf ("ERROR: Could not parse '%s'\n", s);
+	  exit (1);
+	}
+      return out;
+    }
   //	/* SNaN, QNaN, NaN, Inf.  */
   //	for (i=0; s[i] && i < sizeof buf; i++)
   //		buf[i] = tolower(s[i]);
@@ -690,8 +698,16 @@ getnum (const char *s, int singleprec)
   //	if (strcmp(buf, "inf") == 0 || strcmp(buf, "infinity") == 0)
   //		return sign | (singleprec ? 0x7f800000 : 0x7ff0000000000000);
   /* Otherwise assume it's a floating-point literal.  */
-  return sign
-	 | (singleprec ? asuint (strtof (s, 0)) : asuint64 (strtod (s, 0)));
+  uint64_t out = sign
+		 | (singleprec ? asuint (strtof (s, &should_not_be_s))
+			       : asuint64 (strtod (s, &should_not_be_s)));
+  if (should_not_be_s == s)
+    {
+      printf ("ERROR: Could not parse '%s'\n", s);
+      exit (1);
+    }
+
+  return out;
 }
 
 static void
@@ -762,6 +778,10 @@ main (int argc, char *argv[])
   conf.fenv = 1;
   conf.softlim = 0;
   conf.errlim = INFINITY;
+  conf.ignore_zero_sign = 0;
+#if WANT_SVE_MATH
+  uint64_t pg_int = UINT64_MAX;
+#endif
   for (;;)
     {
       argc--;
@@ -801,17 +821,27 @@ main (int argc, char *argv[])
 	    {
 	      argc--;
 	      argv++;
-	      if (argc < 1)
+	      if (argc < 1 || argv[0][1] != '\0')
 		usage ();
 	      conf.rc = argv[0][0];
 	    }
 	  break;
-#if __aarch64__ && WANT_VMATH
+	case 'z':
+	  conf.ignore_zero_sign = 1;
+	  break;
+#ifdef __vpcs
 	case 'c':
 	  argc--;
 	  argv++;
 	  fv[0] = strtof(argv[0], 0);
 	  dv[0] = strtod(argv[0], 0);
+	  break;
+#endif
+#if WANT_SVE_MATH
+	case 'p':
+	  argc--;
+	  argv++;
+	  pg_int = strtoull (argv[0], 0, 0);
 	  break;
 #endif
 	default:
@@ -839,7 +869,19 @@ main (int argc, char *argv[])
     if (strcmp (argv[0], f->name) == 0)
       break;
   if (!f->name)
-    usage ();
+    {
+#ifndef __vpcs
+      /* Ignore vector math functions if vector math is not supported.  */
+      if (strncmp (argv[0], "_ZGVnN", 6) == 0)
+	exit (0);
+#endif
+#if !WANT_SVE_MATH
+      if (strncmp (argv[0], "_ZGVsMxv", 8) == 0)
+	exit (0);
+#endif
+      printf ("math function %s not supported\n", argv[0]);
+      exit (1);
+    }
   if (!f->singleprec && LDBL_MANT_DIG == DBL_MANT_DIG)
     conf.mpfr = 1; /* Use mpfr if long double has no extra precision.  */
   if (!USE_MPFR && conf.mpfr)
@@ -851,5 +893,9 @@ main (int argc, char *argv[])
   argv++;
   parsegen (&gen, argc, argv, f);
   conf.n = gen.cnt;
+#if WANT_SVE_MATH
+  svbool_t pg = parse_pg (pg_int, f->singleprec);
+  conf.pg = &pg;
+#endif
   return cmp (f, &gen, &conf);
 }

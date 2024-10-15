@@ -1,22 +1,20 @@
 /*
  * Double-precision sinh(x) function.
  *
- * Copyright (c) 2022-2023, Arm Limited.
+ * Copyright (c) 2022-2024, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
 #include "math_config.h"
 #include "pl_sig.h"
 #include "pl_test.h"
+#include "exp_inline.h"
 
 #define AbsMask 0x7fffffffffffffff
 #define Half 0x3fe0000000000000
 #define OFlowBound                                                             \
   0x40862e42fefa39f0 /* 0x1.62e42fefa39fp+9, above which using expm1 results   \
 			in NaN.  */
-
-double
-__exp_dd (double, double);
 
 /* Approximation for double-precision sinh(x) using expm1.
    sinh(x) = (exp(x) - exp(-x)) / 2.
@@ -44,7 +42,7 @@ sinh (double x)
 	 either. We use the identity: exp(a) = (exp(a / 2)) ^ 2
 	 to compute sinh(x) ~= (exp(|x| / 2)) ^ 2 / 2    for x > 0
 			    ~= (exp(|x| / 2)) ^ 2 / -2   for x < 0.  */
-      double e = __exp_dd (ax / 2, 0);
+      double e = exp_inline (ax / 2, 0);
       return (e * halfsign) * e;
     }
 
@@ -58,9 +56,6 @@ sinh (double x)
 
 PL_SIG (S, D, 1, sinh, -10.0, 10.0)
 PL_TEST_ULP (sinh, 2.08)
-PL_TEST_INTERVAL (sinh, 0, 0x1p-51, 100)
-PL_TEST_INTERVAL (sinh, -0, -0x1p-51, 100)
-PL_TEST_INTERVAL (sinh, 0x1p-51, 0x1.62e42fefa39fp+9, 100000)
-PL_TEST_INTERVAL (sinh, -0x1p-51, -0x1.62e42fefa39fp+9, 100000)
-PL_TEST_INTERVAL (sinh, 0x1.62e42fefa39fp+9, inf, 1000)
-PL_TEST_INTERVAL (sinh, -0x1.62e42fefa39fp+9, -inf, 1000)
+PL_TEST_SYM_INTERVAL (sinh, 0, 0x1p-51, 100)
+PL_TEST_SYM_INTERVAL (sinh, 0x1p-51, 0x1.62e42fefa39fp+9, 100000)
+PL_TEST_SYM_INTERVAL (sinh, 0x1.62e42fefa39fp+9, inf, 1000)

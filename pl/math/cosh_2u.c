@@ -1,20 +1,18 @@
 /*
  * Double-precision cosh(x) function.
  *
- * Copyright (c) 2022-2023, Arm Limited.
+ * Copyright (c) 2022-2024, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
 #include "math_config.h"
 #include "pl_sig.h"
 #include "pl_test.h"
+#include "exp_inline.h"
 
 #define AbsMask 0x7fffffffffffffff
 #define SpecialBound                                                           \
   0x40861da04cbafe44 /* 0x1.61da04cbafe44p+9, above which exp overflows.  */
-
-double
-__exp_dd (double, double);
 
 static double
 specialcase (double x, uint64_t iax)
@@ -25,7 +23,7 @@ specialcase (double x, uint64_t iax)
     return __math_invalid (x);
   /* exp overflows above SpecialBound. At this magnitude cosh(x) is dominated by
      exp(x), so we can approximate cosh(x) by (exp(|x|/2)) ^ 2 / 2.  */
-  double t = __exp_dd (asdouble (iax) / 2, 0);
+  double t = exp_inline (asdouble (iax) / 2, 0);
   return (0.5 * t) * t;
 }
 
@@ -52,15 +50,12 @@ cosh (double x)
   double ax = asdouble (iax);
   /* Use double-precision exp helper to calculate exp(x), then:
      cosh(x) = exp(|x|) / 2 + 1 / (exp(|x| * 2).  */
-  double t = __exp_dd (ax, 0);
+  double t = exp_inline (ax, 0);
   return 0.5 * t + 0.5 / t;
 }
 
 PL_SIG (S, D, 1, cosh, -10.0, 10.0)
 PL_TEST_ULP (cosh, 1.43)
-PL_TEST_INTERVAL (cosh, 0, 0x1.61da04cbafe44p+9, 100000)
-PL_TEST_INTERVAL (cosh, -0, -0x1.61da04cbafe44p+9, 100000)
-PL_TEST_INTERVAL (cosh, 0x1.61da04cbafe44p+9, 0x1p10, 1000)
-PL_TEST_INTERVAL (cosh, -0x1.61da04cbafe44p+9, -0x1p10, 1000)
-PL_TEST_INTERVAL (cosh, 0x1p10, inf, 100)
-PL_TEST_INTERVAL (cosh, -0x1p10, -inf, 100)
+PL_TEST_SYM_INTERVAL (cosh, 0, 0x1.61da04cbafe44p+9, 100000)
+PL_TEST_SYM_INTERVAL (cosh, 0x1.61da04cbafe44p+9, 0x1p10, 1000)
+PL_TEST_SYM_INTERVAL (cosh, 0x1p10, inf, 100)
