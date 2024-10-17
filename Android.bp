@@ -137,6 +137,7 @@ cc_library_static {
                 "string/aarch64/memcmp-sve.S",
                 "string/aarch64/memcmp.S",
                 "string/aarch64/memcpy-advsimd.S",
+                "string/aarch64/memcpy-mops.S",
                 "string/aarch64/memcpy-sve.S",
                 "string/aarch64/memcpy.S",
                 "string/aarch64/memmove-mops.S",
