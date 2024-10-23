@@ -1,14 +1,14 @@
 /*
  * Single-precision log(1+x) function.
  *
- * Copyright (c) 2022-2023, Arm Limited.
+ * Copyright (c) 2022-2024, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
 #include "poly_scalar_f32.h"
 #include "math_config.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 #define Ln2 (0x1.62e43p-1f)
 #define SignMask (0x80000000)
@@ -153,9 +153,9 @@ log1pf (float x)
   return fmaf (scale_back, Ln2, p);
 }
 
-PL_SIG (S, F, 1, log1p, -0.9, 10.0)
-PL_TEST_ULP (log1pf, 1.52)
-PL_TEST_SYM_INTERVAL (log1pf, 0.0, 0x1p-23, 50000)
-PL_TEST_SYM_INTERVAL (log1pf, 0x1p-23, 0.001, 50000)
-PL_TEST_SYM_INTERVAL (log1pf, 0.001, 1.0, 50000)
-PL_TEST_SYM_INTERVAL (log1pf, 1.0, inf, 5000)
+TEST_SIG (S, F, 1, log1p, -0.9, 10.0)
+TEST_ULP (log1pf, 1.52)
+TEST_SYM_INTERVAL (log1pf, 0.0, 0x1p-23, 50000)
+TEST_SYM_INTERVAL (log1pf, 0x1p-23, 0.001, 50000)
+TEST_SYM_INTERVAL (log1pf, 0.001, 1.0, 50000)
+TEST_SYM_INTERVAL (log1pf, 1.0, inf, 5000)

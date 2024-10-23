@@ -7,6 +7,8 @@
 
 #include "mathlib.h"
 #include "v_math.h"
+#include "test_defs.h"
+#include "test_sig.h"
 
 static const struct data
 {
@@ -98,3 +100,10 @@ float64x2_t VPCS_ATTR V_NAME_D1 (log) (float64x2_t x)
     return special_case (x, y, hi, r2, cmp);
   return vfmaq_f64 (hi, y, r2);
 }
+
+TEST_SIG (V, D, 1, log, 0.01, 11.1)
+TEST_ULP (V_NAME_D1 (log), 1.2)
+TEST_DISABLE_FENV_IF_NOT (V_NAME_D1 (log), WANT_SIMD_EXCEPT)
+TEST_INTERVAL (V_NAME_D1 (log), 0, 0xffff000000000000, 10000)
+TEST_INTERVAL (V_NAME_D1 (log), 0x1p-4, 0x1p4, 400000)
+TEST_INTERVAL (V_NAME_D1 (log), 0, inf, 400000)

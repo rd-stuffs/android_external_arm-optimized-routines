@@ -1,12 +1,13 @@
 /*
  * Single-precision vector 2^x function.
  *
- * Copyright (c) 2019-2023, Arm Limited.
+ * Copyright (c) 2019-2024, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
 #include "mathlib.h"
 #include "v_math.h"
+#include "test_defs.h"
 
 static const float Poly[] = {
   /*  maxerr: 0.878 ulp.  */
@@ -70,3 +71,8 @@ _ZGVnN4v_exp2f_1u (float32x4_t x)
     return specialcase (poly, n, e, absn);
   return scale * poly;
 }
+
+TEST_ULP (_ZGVnN4v_exp2f_1u, 0.4)
+TEST_DISABLE_FENV (_ZGVnN4v_exp2f_1u)
+TEST_INTERVAL (_ZGVnN4v_exp2f_1u, 0, 0xffff0000, 10000)
+TEST_SYM_INTERVAL (_ZGVnN4v_exp2f_1u, 0x1p-14, 0x1p8, 500000)

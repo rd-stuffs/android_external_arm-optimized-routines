@@ -6,8 +6,8 @@
  */
 
 #include "v_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 static const struct data
 {
@@ -110,9 +110,9 @@ float32x4_t VPCS_ATTR V_NAME_F1 (erf) (float32x4_t x)
   return y;
 }
 
-PL_SIG (V, F, 1, erf, -4.0, 4.0)
-PL_TEST_ULP (V_NAME_F1 (erf), 1.43)
-PL_TEST_DISABLE_FENV_IF_NOT (V_NAME_F1 (erf), WANT_SIMD_EXCEPT)
-PL_TEST_SYM_INTERVAL (V_NAME_F1 (erf), 0, 3.9375, 40000)
-PL_TEST_SYM_INTERVAL (V_NAME_F1 (erf), 3.9375, inf, 40000)
-PL_TEST_SYM_INTERVAL (V_NAME_F1 (erf), 0, inf, 40000)
+TEST_SIG (V, F, 1, erf, -4.0, 4.0)
+TEST_ULP (V_NAME_F1 (erf), 1.43)
+TEST_DISABLE_FENV_IF_NOT (V_NAME_F1 (erf), WANT_SIMD_EXCEPT)
+TEST_SYM_INTERVAL (V_NAME_F1 (erf), 0, 3.9375, 40000)
+TEST_SYM_INTERVAL (V_NAME_F1 (erf), 3.9375, inf, 40000)
+TEST_SYM_INTERVAL (V_NAME_F1 (erf), 0, inf, 40000)

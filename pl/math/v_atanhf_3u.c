@@ -6,8 +6,8 @@
  */
 
 #include "v_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 #include "v_log1pf_inline.h"
 
 const static struct data
@@ -76,12 +76,13 @@ VPCS_ATTR float32x4_t V_NAME_F1 (atanh) (float32x4_t x)
   return vmulq_f32 (halfsign, y);
 }
 
-PL_SIG (V, F, 1, atanh, -1.0, 1.0)
-PL_TEST_ULP (V_NAME_F1 (atanh), 2.44)
-PL_TEST_DISABLE_FENV_IF_NOT (V_NAME_F1 (atanh), WANT_SIMD_EXCEPT)
+TEST_SIG (V, F, 1, atanh, -1.0, 1.0)
+TEST_ULP (V_NAME_F1 (atanh), 2.44)
+TEST_DISABLE_FENV_IF_NOT (V_NAME_F1 (atanh), WANT_SIMD_EXCEPT)
+TEST_SYM_INTERVAL (V_NAME_F1 (atanh), 0, 0x1p-12, 500)
+TEST_SYM_INTERVAL (V_NAME_F1 (atanh), 0x1p-12, 1, 200000)
+TEST_SYM_INTERVAL (V_NAME_F1 (atanh), 1, inf, 1000)
 /* atanh is asymptotic at 1, which is the default control value - have to set
  -c 0 specially to ensure fp exceptions are triggered correctly (choice of
  control lane is irrelevant if fp exceptions are disabled).  */
-PL_TEST_SYM_INTERVAL_C (V_NAME_F1 (atanh), 0, 0x1p-12, 500, 0)
-PL_TEST_SYM_INTERVAL_C (V_NAME_F1 (atanh), 0x1p-12, 1, 200000, 0)
-PL_TEST_SYM_INTERVAL_C (V_NAME_F1 (atanh), 1, inf, 1000, 0)
+TEST_CONTROL_VALUE (V_NAME_F1 (atanh), 0)

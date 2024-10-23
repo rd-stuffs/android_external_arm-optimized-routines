@@ -6,8 +6,8 @@
  */
 
 #include "v_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 #include "v_expm1f_inline.h"
 
 static const struct data
@@ -74,9 +74,9 @@ float32x4_t VPCS_ATTR V_NAME_F1 (sinh) (float32x4_t x)
   return vmulq_f32 (t, halfsign);
 }
 
-PL_SIG (V, F, 1, sinh, -10.0, 10.0)
-PL_TEST_ULP (V_NAME_F1 (sinh), 1.76)
-PL_TEST_DISABLE_FENV_IF_NOT (V_NAME_F1 (sinh), WANT_SIMD_EXCEPT)
-PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinh), 0, 0x2fb504f4, 1000)
-PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinh), 0x2fb504f4, 0x42b0c0a7, 100000)
-PL_TEST_SYM_INTERVAL (V_NAME_F1 (sinh), 0x42b0c0a7, inf, 1000)
+TEST_SIG (V, F, 1, sinh, -10.0, 10.0)
+TEST_ULP (V_NAME_F1 (sinh), 1.76)
+TEST_DISABLE_FENV_IF_NOT (V_NAME_F1 (sinh), WANT_SIMD_EXCEPT)
+TEST_SYM_INTERVAL (V_NAME_F1 (sinh), 0, 0x2fb504f4, 1000)
+TEST_SYM_INTERVAL (V_NAME_F1 (sinh), 0x2fb504f4, 0x42b0c0a7, 100000)
+TEST_SYM_INTERVAL (V_NAME_F1 (sinh), 0x42b0c0a7, inf, 1000)

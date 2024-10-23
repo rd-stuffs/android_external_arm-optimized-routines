@@ -1,13 +1,13 @@
 /*
  * Double-precision erf(x) function.
  *
- * Copyright (c) 2023, Arm Limited.
+ * Copyright (c) 2023-2024, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
 #include "math_config.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 #define TwoOverSqrtPiMinusOne 0x1.06eba8214db69p-3
 #define Shift 0x1p45
@@ -95,8 +95,8 @@ erf (double x)
   return asdouble (sign | asuint64 (1.0));
 }
 
-PL_SIG (S, D, 1, erf, -6.0, 6.0)
-PL_TEST_ULP (erf, 1.79)
-PL_TEST_SYM_INTERVAL (erf, 0, 5.9921875, 40000)
-PL_TEST_SYM_INTERVAL (erf, 5.9921875, inf, 40000)
-PL_TEST_SYM_INTERVAL (erf, 0, inf, 40000)
+TEST_SIG (S, D, 1, erf, -6.0, 6.0)
+TEST_ULP (erf, 1.79)
+TEST_SYM_INTERVAL (erf, 0, 5.9921875, 40000)
+TEST_SYM_INTERVAL (erf, 5.9921875, inf, 40000)
+TEST_SYM_INTERVAL (erf, 0, inf, 40000)

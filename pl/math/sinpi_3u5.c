@@ -9,8 +9,8 @@
 #include <math.h>
 #include "mathlib.h"
 #include "math_config.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 #include "poly_scalar_f64.h"
 
 /* Taylor series coefficents for sin(pi * x).
@@ -85,10 +85,10 @@ sinpi (double x)
 }
 
 #if WANT_TRIGPI_TESTS
-PL_SIG (S, D, 1, sinpi, -0.9, 0.9)
-PL_TEST_ULP (sinpi, 2.53)
-PL_TEST_SYM_INTERVAL (sinpi, 0, 0x1p-63, 5000)
-PL_TEST_SYM_INTERVAL (sinpi, 0x1p-63, 0.5, 10000)
-PL_TEST_SYM_INTERVAL (sinpi, 0.5, 0x1p51, 10000)
-PL_TEST_SYM_INTERVAL (sinpi, 0x1p51, inf, 10000)
+TEST_SIG (S, D, 1, sinpi, -0.9, 0.9)
+TEST_ULP (sinpi, 2.53)
+TEST_SYM_INTERVAL (sinpi, 0, 0x1p-63, 5000)
+TEST_SYM_INTERVAL (sinpi, 0x1p-63, 0.5, 10000)
+TEST_SYM_INTERVAL (sinpi, 0.5, 0x1p51, 10000)
+TEST_SYM_INTERVAL (sinpi, 0x1p51, inf, 10000)
 #endif

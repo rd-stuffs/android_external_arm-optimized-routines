@@ -6,8 +6,8 @@
  */
 
 #include "sv_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 #include "sv_expf_inline.h"
 
 /* Roughly 87.3. For x < -Thres, the result is subnormal and not handled
@@ -42,8 +42,8 @@ svfloat32_t SV_NAME_F1 (exp) (svfloat32_t x, const svbool_t pg)
   return expf_inline (x, pg, &d->d);
 }
 
-PL_SIG (SV, F, 1, exp, -9.9, 9.9)
-PL_TEST_ULP (SV_NAME_F1 (exp), 0.55)
-PL_TEST_DISABLE_FENV (SV_NAME_F1 (exp))
-PL_TEST_SYM_INTERVAL (SV_NAME_F1 (exp), 0, Thres, 50000)
-PL_TEST_SYM_INTERVAL (SV_NAME_F1 (exp), Thres, inf, 50000)
+TEST_SIG (SV, F, 1, exp, -9.9, 9.9)
+TEST_ULP (SV_NAME_F1 (exp), 0.55)
+TEST_DISABLE_FENV (SV_NAME_F1 (exp))
+TEST_SYM_INTERVAL (SV_NAME_F1 (exp), 0, Thres, 50000)
+TEST_SYM_INTERVAL (SV_NAME_F1 (exp), Thres, inf, 50000)

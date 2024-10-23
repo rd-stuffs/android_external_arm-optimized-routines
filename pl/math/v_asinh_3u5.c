@@ -7,8 +7,8 @@
 
 #include "v_math.h"
 #include "poly_advsimd_f64.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 #define A(i) v_f64 (__v_log_data.poly[i])
 #define N (1 << V_LOG_TABLE_BITS)
@@ -165,16 +165,15 @@ VPCS_ATTR float64x2_t V_NAME_D1 (asinh) (float64x2_t x)
   return y;
 }
 
-PL_SIG (V, D, 1, asinh, -10.0, 10.0)
-PL_TEST_ULP (V_NAME_D1 (asinh), 2.80)
-PL_TEST_DISABLE_FENV_IF_NOT (V_NAME_D1 (asinh), WANT_SIMD_EXCEPT)
+TEST_SIG (V, D, 1, asinh, -10.0, 10.0)
+TEST_ULP (V_NAME_D1 (asinh), 2.80)
+TEST_DISABLE_FENV_IF_NOT (V_NAME_D1 (asinh), WANT_SIMD_EXCEPT)
+TEST_SYM_INTERVAL (V_NAME_D1 (asinh), 0, 0x1p-26, 50000)
+TEST_SYM_INTERVAL (V_NAME_D1 (asinh), 0x1p-26, 1, 50000)
+TEST_SYM_INTERVAL (V_NAME_D1 (asinh), 1, 0x1p511, 50000)
+TEST_SYM_INTERVAL (V_NAME_D1 (asinh), 0x1p511, inf, 40000)
 /* Test vector asinh 3 times, with control lane < 1, > 1 and special.
    Ensures the v_sel is choosing the right option in all cases.  */
-#define V_ASINH_INTERVAL(lo, hi, n)                                           \
-  PL_TEST_SYM_INTERVAL_C (V_NAME_D1 (asinh), lo, hi, n, 0.5)                  \
-  PL_TEST_SYM_INTERVAL_C (V_NAME_D1 (asinh), lo, hi, n, 2)                    \
-  PL_TEST_SYM_INTERVAL_C (V_NAME_D1 (asinh), lo, hi, n, 0x1p600)
-V_ASINH_INTERVAL (0, 0x1p-26, 50000)
-V_ASINH_INTERVAL (0x1p-26, 1, 50000)
-V_ASINH_INTERVAL (1, 0x1p511, 50000)
-V_ASINH_INTERVAL (0x1p511, inf, 40000)
+TEST_CONTROL_VALUE (V_NAME_D1 (asinh), 0.5)
+TEST_CONTROL_VALUE (V_NAME_D1 (asinh), 2)
+TEST_CONTROL_VALUE (V_NAME_D1 (asinh), 0x1p600)

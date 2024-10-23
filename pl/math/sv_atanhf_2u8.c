@@ -7,8 +7,8 @@
 
 #include "sv_math.h"
 #include "mathlib.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 #include "sv_log1pf_inline.h"
 
@@ -46,12 +46,13 @@ svfloat32_t SV_NAME_F1 (atanh) (svfloat32_t x, const svbool_t pg)
   return svmul_x (pg, halfsign, y);
 }
 
-PL_SIG (SV, F, 1, atanh, -1.0, 1.0)
-PL_TEST_ULP (SV_NAME_F1 (atanh), 2.59)
-PL_TEST_DISABLE_FENV (SV_NAME_F1 (atanh))
+TEST_SIG (SV, F, 1, atanh, -1.0, 1.0)
+TEST_ULP (SV_NAME_F1 (atanh), 2.59)
+TEST_DISABLE_FENV (SV_NAME_F1 (atanh))
+TEST_SYM_INTERVAL (SV_NAME_F1 (atanh), 0, 0x1p-12, 1000)
+TEST_SYM_INTERVAL (SV_NAME_F1 (atanh), 0x1p-12, 1, 20000)
+TEST_SYM_INTERVAL (SV_NAME_F1 (atanh), 1, inf, 1000)
 /* atanh is asymptotic at 1, which is the default control value - have to set
  -c 0 specially to ensure fp exceptions are triggered correctly (choice of
  control lane is irrelevant if fp exceptions are disabled).  */
-PL_TEST_SYM_INTERVAL_C (SV_NAME_F1 (atanh), 0, 0x1p-12, 1000, 0)
-PL_TEST_SYM_INTERVAL_C (SV_NAME_F1 (atanh), 0x1p-12, 1, 20000, 0)
-PL_TEST_SYM_INTERVAL_C (SV_NAME_F1 (atanh), 1, inf, 1000, 0)
+TEST_CONTROL_VALUE (SV_NAME_F1 (atanh), 0)

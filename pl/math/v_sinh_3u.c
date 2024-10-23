@@ -7,8 +7,8 @@
 
 #include "v_math.h"
 #include "poly_advsimd_f64.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 static const struct data
 {
@@ -113,9 +113,9 @@ float64x2_t VPCS_ATTR V_NAME_D1 (sinh) (float64x2_t x)
   return vmulq_f64 (t, halfsign);
 }
 
-PL_SIG (V, D, 1, sinh, -10.0, 10.0)
-PL_TEST_ULP (V_NAME_D1 (sinh), 2.08)
-PL_TEST_DISABLE_FENV_IF_NOT (V_NAME_D1 (sinh), WANT_SIMD_EXCEPT)
-PL_TEST_SYM_INTERVAL (V_NAME_D1 (sinh), 0, 0x1p-26, 1000)
-PL_TEST_SYM_INTERVAL (V_NAME_D1 (sinh), 0x1p-26, 0x1p9, 500000)
-PL_TEST_SYM_INTERVAL (V_NAME_D1 (sinh), 0x1p9, inf, 1000)
+TEST_SIG (V, D, 1, sinh, -10.0, 10.0)
+TEST_ULP (V_NAME_D1 (sinh), 2.08)
+TEST_DISABLE_FENV_IF_NOT (V_NAME_D1 (sinh), WANT_SIMD_EXCEPT)
+TEST_SYM_INTERVAL (V_NAME_D1 (sinh), 0, 0x1p-26, 1000)
+TEST_SYM_INTERVAL (V_NAME_D1 (sinh), 0x1p-26, 0x1p9, 500000)
+TEST_SYM_INTERVAL (V_NAME_D1 (sinh), 0x1p9, inf, 1000)

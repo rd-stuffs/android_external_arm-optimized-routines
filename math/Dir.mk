@@ -3,6 +3,8 @@
 # Copyright (c) 2019-2024, Arm Limited.
 # SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
 
+.SECONDEXPANSION:
+
 ifneq ($(OS),Linux)
   ifeq ($(WANT_SIMD_EXCEPT),1)
     $(error WANT_SIMD_EXCEPT is not supported outside Linux)
@@ -70,7 +72,40 @@ $(B)/test/mathtest.o: CFLAGS_ALL += -fmath-errno
 $(math-host-objs): CC = $(HOST_CC)
 $(math-host-objs): CFLAGS_ALL = $(HOST_CFLAGS)
 
-$(B)/test/ulp.o: $(S)/test/ulp.h
+ulp-funcs-dir = build/test/ulp-funcs/
+ulp-wrappers-dir = build/test/ulp-wrappers/
+mathbench-funcs-dir = build/test/mathbench-funcs/
+test-sig-dirs = $(ulp-funcs-dir) $(ulp-wrappers-dir) $(mathbench-funcs-dir)
+$(test-sig-dirs) $(addsuffix /$(ARCH),$(test-sig-dirs)):
+	mkdir -p $@
+
+ulp-funcs = $(patsubst $(S)/%,$(ulp-funcs-dir)/%,$(basename $(math-lib-srcs)))
+ulp-wrappers = $(patsubst $(S)/%,$(ulp-wrappers-dir)/%,$(basename $(math-lib-srcs)))
+mathbench-funcs = $(patsubst $(S)/%,$(mathbench-funcs-dir)/%,$(basename $(math-lib-srcs)))
+
+define emit_sig
+$1/%: $(S)/%.c | $$$$(@D)
+	$(CC) $$< $(math-cflags) -I$(S)/include -D$2 -E -o - | { grep TEST_SIG || true; } | cut -f 2- -d ' ' > $$@
+endef
+
+$(eval $(call emit_sig,$(ulp-funcs-dir),EMIT_ULP_FUNCS))
+$(eval $(call emit_sig,$(ulp-wrappers-dir),EMIT_ULP_WRAPPERS))
+$(eval $(call emit_sig,$(mathbench-funcs-dir),EMIT_MATHBENCH_FUNCS))
+
+ulp-funcs-gen = build/include/test/ulp_funcs_gen.h
+ulp-wrappers-gen = build/include/test/ulp_wrappers_gen.h
+mathbench-funcs-gen = build/include/test/mathbench_funcs_gen.h
+math-tools-autogen-headers = $(ulp-funcs-gen) $(ulp-wrappers-gen) $(mathbench-funcs-gen)
+
+$(ulp-funcs-gen): $(ulp-funcs)
+$(ulp-wrappers-gen): $(ulp-wrappers)
+$(mathbench-funcs-gen): $(mathbench-funcs)
+
+$(math-tools-autogen-headers): | $$(@D)
+	cat $^ | sort -u > $@
+
+$(B)/test/mathbench.o: $(mathbench-funcs-gen)
+$(B)/test/ulp.o: $(S)/test/ulp.h $(ulp-funcs-gen) $(ulp-wrappers-gen)
 
 build/lib/libmathlib.so: $(math-lib-objs:%.o=%.os)
 	$(CC) $(CFLAGS_ALL) $(LDFLAGS) -shared -o $@ $^
@@ -126,8 +161,60 @@ check-math-test: $(math-tools)
 check-math-rtest: $(math-host-tools) $(math-tools)
 	cat $(math-rtests) | build/bin/rtest | $(EMULATOR) build/bin/mathtest $(math-testflags)
 
+ulp-input-dir = $(B)/test/inputs
+$(ulp-input-dir) $(ulp-input-dir)/$(ARCH):
+	mkdir -p $@
+
+math-lib-lims = $(patsubst $(S)/%.c,$(ulp-input-dir)/%.ulp,$(math-lib-srcs))
+math-lib-lims-nn = $(patsubst $(S)/%.c,$(ulp-input-dir)/%.ulp_nn,$(math-lib-srcs))
+math-lib-fenvs = $(patsubst $(S)/%.c,$(ulp-input-dir)/%.fenv,$(math-lib-srcs))
+math-lib-itvs = $(patsubst $(S)/%.c,$(ulp-input-dir)/%.itv,$(math-lib-srcs))
+
+ulp-inputs = $(math-lib-lims) $(math-lib-lims-nn) $(math-lib-fenvs) $(math-lib-itvs)
+$(ulp-inputs): CFLAGS = -I$(S)/test -I$(S)/include $(math-cflags)
+
+$(ulp-input-dir)/%.ulp: $(S)/%.c | $$(@D)
+	$(CC) $(CFLAGS) $< -o - -E | { grep "TEST_ULP " || true; } > $@
+
+$(ulp-input-dir)/%.ulp_nn: $(S)/%.c | $$(@D)
+	$(CC) $(CFLAGS) $< -o - -E | { grep "TEST_ULP_NONNEAREST " || true; } > $@
+
+$(ulp-input-dir)/%.fenv: $(S)/%.c | $$(@D)
+	$(CC) $(CFLAGS) $< -o - -E | { grep "TEST_DISABLE_FENV " || true; } > $@
+
+$(ulp-input-dir)/%.itv: $(S)/%.c | $$(@D)
+	$(CC) $(CFLAGS) $< -o - -E | { grep "TEST_INTERVAL " || true; } | sed "s/ TEST_INTERVAL/\nTEST_INTERVAL/g" > $@
+
+ulp-lims = $(ulp-input-dir)/limits
+$(ulp-lims): $(math-lib-lims)
+
+ulp-lims-nn = $(ulp-input-dir)/limits_nn
+$(ulp-lims-nn): $(math-lib-lims-nn)
+
+fenv-exps := $(ulp-input-dir)/fenv
+$(fenv-exps): $(math-lib-fenvs)
+
+generic-itvs = $(ulp-input-dir)/itvs
+$(generic-itvs): $(filter-out $(ulp-input-dir)/$(ARCH)/%,$(math-lib-itvs))
+
+arch-itvs = $(ulp-input-dir)/$(ARCH)/itvs
+$(arch-itvs): $(filter $(ulp-input-dir)/$(ARCH)/%,$(math-lib-itvs))
+
+# Remove first word, which will be TEST directive
+$(ulp-lims) $(ulp-lims-nn) $(fenv-exps) $(arch-itvs) $(generic-itvs): | $$(@D)
+	sed "s/TEST_[^ ]* //g" $^ | sort -u > $@
+
+check-math-ulp: $(ulp-lims) $(ulp-lims-nn)
+check-math-ulp: $(fenv-exps)
+check-math-ulp: $(generic-itvs) $(arch-itvs)
 check-math-ulp: $(math-tools)
-	ULPFLAGS="$(math-ulpflags)" WANT_SIMD_TESTS="$(WANT_SIMD_TESTS)" WANT_SIMD_EXCEPT="$(WANT_SIMD_EXCEPT)" WANT_EXP10_TESTS="$(WANT_EXP10_TESTS)" build/bin/runulp.sh $(EMULATOR)
+	ULPFLAGS="$(math-ulpflags)" \
+	LIMITS=../../$(ulp-lims) \
+	ARCH_ITVS=../../$(arch-itvs) \
+	GEN_ITVS=../../$(generic-itvs) \
+	DISABLE_FENV=../../$(fenv-exps) \
+	FUNC=$(func) \
+	build/bin/runulp.sh $(EMULATOR)
 
 check-math: check-math-test check-math-rtest check-math-ulp
 

@@ -1,13 +1,13 @@
 /*
  * Single-precision cosh(x) function.
  *
- * Copyright (c) 2022-2023, Arm Limited.
+ * Copyright (c) 2022-2024, Arm Limited.
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
 #include "math_config.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 #define AbsMask 0x7fffffff
 #define TinyBound 0x20000000 /* 0x1p-63: Round to 1 below this.  */
@@ -61,8 +61,8 @@ coshf (float x)
   return 0.5f * t + 0.5f / t;
 }
 
-PL_SIG (S, F, 1, cosh, -10.0, 10.0)
-PL_TEST_ULP (coshf, 1.89)
-PL_TEST_SYM_INTERVAL (coshf, 0, 0x1p-63, 100)
-PL_TEST_SYM_INTERVAL (coshf, 0, 0x1.5a92d8p+6, 80000)
-PL_TEST_SYM_INTERVAL (coshf, 0x1.5a92d8p+6, inf, 2000)
+TEST_SIG (S, F, 1, cosh, -10.0, 10.0)
+TEST_ULP (coshf, 1.89)
+TEST_SYM_INTERVAL (coshf, 0, 0x1p-63, 100)
+TEST_SYM_INTERVAL (coshf, 0, 0x1.5a92d8p+6, 80000)
+TEST_SYM_INTERVAL (coshf, 0x1.5a92d8p+6, inf, 2000)

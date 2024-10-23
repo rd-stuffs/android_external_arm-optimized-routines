@@ -6,8 +6,8 @@
  */
 
 #include "sv_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 static const struct data
 {
@@ -74,8 +74,8 @@ svfloat32_t SV_NAME_F1 (cos) (svfloat32_t x, const svbool_t pg)
   return svmul_x (pg, f, y);
 }
 
-PL_SIG (SV, F, 1, cos, -3.1, 3.1)
-PL_TEST_ULP (SV_NAME_F1 (cos), 1.57)
-PL_TEST_DISABLE_FENV (SV_NAME_F1 (cos))
-PL_TEST_INTERVAL (SV_NAME_F1 (cos), 0, 0xffff0000, 10000)
-PL_TEST_INTERVAL (SV_NAME_F1 (cos), 0x1p-4, 0x1p4, 500000)
+TEST_SIG (SV, F, 1, cos, -3.1, 3.1)
+TEST_ULP (SV_NAME_F1 (cos), 1.57)
+TEST_DISABLE_FENV (SV_NAME_F1 (cos))
+TEST_INTERVAL (SV_NAME_F1 (cos), 0, 0xffff0000, 10000)
+TEST_INTERVAL (SV_NAME_F1 (cos), 0x1p-4, 0x1p4, 500000)

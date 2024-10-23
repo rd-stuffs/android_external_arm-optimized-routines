@@ -6,8 +6,8 @@
  */
 
 #include "sv_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 #define Thres 0x1.5d5e2ap+6f
 
@@ -75,8 +75,8 @@ svfloat32_t SV_NAME_F1 (exp2) (svfloat32_t x, const svbool_t pg)
   return sv_exp2f_inline (x, pg, d);
 }
 
-PL_SIG (SV, F, 1, exp2, -9.9, 9.9)
-PL_TEST_ULP (SV_NAME_F1 (exp2), 0.54)
-PL_TEST_DISABLE_FENV (SV_NAME_F1 (exp2))
-PL_TEST_SYM_INTERVAL (SV_NAME_F1 (exp2), 0, Thres, 50000)
-PL_TEST_SYM_INTERVAL (SV_NAME_F1 (exp2), Thres, inf, 50000)
+TEST_SIG (SV, F, 1, exp2, -9.9, 9.9)
+TEST_ULP (SV_NAME_F1 (exp2), 0.54)
+TEST_DISABLE_FENV (SV_NAME_F1 (exp2))
+TEST_SYM_INTERVAL (SV_NAME_F1 (exp2), 0, Thres, 50000)
+TEST_SYM_INTERVAL (SV_NAME_F1 (exp2), Thres, inf, 50000)

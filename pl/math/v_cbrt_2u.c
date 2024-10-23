@@ -6,8 +6,8 @@
  */
 
 #include "v_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 #include "poly_advsimd_f64.h"
 
 const static struct data
@@ -110,6 +110,6 @@ VPCS_ATTR float64x2_t V_NAME_D1 (cbrt) (float64x2_t x)
   return vbslq_f64 (d->abs_mask, y, x);
 }
 
-PL_TEST_ULP (V_NAME_D1 (cbrt), 1.30)
-PL_SIG (V, D, 1, cbrt, -10.0, 10.0)
-PL_TEST_SYM_INTERVAL (V_NAME_D1 (cbrt), 0, inf, 1000000)
+TEST_ULP (V_NAME_D1 (cbrt), 1.30)
+TEST_SIG (V, D, 1, cbrt, -10.0, 10.0)
+TEST_SYM_INTERVAL (V_NAME_D1 (cbrt), 0, inf, 1000000)

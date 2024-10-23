@@ -5,8 +5,8 @@
  */
 
 #include "sv_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 #define WANT_SV_LOG1P_K0_SHORTCUT 1
 #include "sv_log1p_inline.h"
@@ -41,10 +41,10 @@ svfloat64_t SV_NAME_D1 (acosh) (svfloat64_t x, const svbool_t pg)
   return sv_log1p_inline (y, pg);
 }
 
-PL_SIG (SV, D, 1, acosh, 1.0, 10.0)
-PL_TEST_ULP (SV_NAME_D1 (acosh), 2.69)
-PL_TEST_DISABLE_FENV (SV_NAME_D1 (acosh))
-PL_TEST_INTERVAL (SV_NAME_D1 (acosh), 1, 0x1p511, 90000)
-PL_TEST_INTERVAL (SV_NAME_D1 (acosh), 0x1p511, inf, 10000)
-PL_TEST_INTERVAL (SV_NAME_D1 (acosh), 0, 1, 1000)
-PL_TEST_INTERVAL (SV_NAME_D1 (acosh), -0, -inf, 10000)
+TEST_SIG (SV, D, 1, acosh, 1.0, 10.0)
+TEST_ULP (SV_NAME_D1 (acosh), 2.69)
+TEST_DISABLE_FENV (SV_NAME_D1 (acosh))
+TEST_INTERVAL (SV_NAME_D1 (acosh), 1, 0x1p511, 90000)
+TEST_INTERVAL (SV_NAME_D1 (acosh), 0x1p511, inf, 10000)
+TEST_INTERVAL (SV_NAME_D1 (acosh), 0, 1, 1000)
+TEST_INTERVAL (SV_NAME_D1 (acosh), -0, -inf, 10000)

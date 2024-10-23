@@ -6,8 +6,8 @@
  */
 
 #include "sv_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 static const struct data
 {
@@ -85,12 +85,12 @@ svfloat32_t SV_NAME_F1 (log) (svfloat32_t x, const svbool_t pg)
   return svmla_x (pg, p, r2, y);
 }
 
-PL_SIG (SV, F, 1, log, 0.01, 11.1)
-PL_TEST_ULP (SV_NAME_F1 (log), 2.85)
-PL_TEST_DISABLE_FENV (SV_NAME_F1 (log))
-PL_TEST_INTERVAL (SV_NAME_F1 (log), -0.0, -inf, 100)
-PL_TEST_INTERVAL (SV_NAME_F1 (log), 0, 0x1p-126, 100)
-PL_TEST_INTERVAL (SV_NAME_F1 (log), 0x1p-126, 0x1p-23, 50000)
-PL_TEST_INTERVAL (SV_NAME_F1 (log), 0x1p-23, 1.0, 50000)
-PL_TEST_INTERVAL (SV_NAME_F1 (log), 1.0, 100, 50000)
-PL_TEST_INTERVAL (SV_NAME_F1 (log), 100, inf, 50000)
+TEST_SIG (SV, F, 1, log, 0.01, 11.1)
+TEST_ULP (SV_NAME_F1 (log), 2.85)
+TEST_DISABLE_FENV (SV_NAME_F1 (log))
+TEST_INTERVAL (SV_NAME_F1 (log), -0.0, -inf, 100)
+TEST_INTERVAL (SV_NAME_F1 (log), 0, 0x1p-126, 100)
+TEST_INTERVAL (SV_NAME_F1 (log), 0x1p-126, 0x1p-23, 50000)
+TEST_INTERVAL (SV_NAME_F1 (log), 0x1p-23, 1.0, 50000)
+TEST_INTERVAL (SV_NAME_F1 (log), 1.0, 100, 50000)
+TEST_INTERVAL (SV_NAME_F1 (log), 100, inf, 50000)

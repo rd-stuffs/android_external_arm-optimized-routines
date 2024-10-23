@@ -6,8 +6,8 @@
  */
 
 #include "sv_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 #include "poly_sve_f64.h"
 
 const static struct data
@@ -117,7 +117,7 @@ svfloat64_t SV_NAME_D1 (cbrt) (svfloat64_t x, const svbool_t pg)
   return svreinterpret_f64 (svorr_x (pg, svreinterpret_u64 (y), sign));
 }
 
-PL_SIG (SV, D, 1, cbrt, -10.0, 10.0)
-PL_TEST_ULP (SV_NAME_D1 (cbrt), 1.30)
-PL_TEST_DISABLE_FENV (SV_NAME_D1 (cbrt))
-PL_TEST_SYM_INTERVAL (SV_NAME_D1 (cbrt), 0, inf, 1000000)
+TEST_SIG (SV, D, 1, cbrt, -10.0, 10.0)
+TEST_ULP (SV_NAME_D1 (cbrt), 1.30)
+TEST_DISABLE_FENV (SV_NAME_D1 (cbrt))
+TEST_SYM_INTERVAL (SV_NAME_D1 (cbrt), 0, inf, 1000000)

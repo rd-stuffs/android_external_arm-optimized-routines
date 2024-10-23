@@ -7,8 +7,8 @@
 #include "sv_math.h"
 #include "poly_sve_f64.h"
 #include "mathlib.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 static const struct data
 {
@@ -89,9 +89,9 @@ svfloat64_t SV_NAME_D1 (tanh) (svfloat64_t x, svbool_t pg)
   return svdiv_x (pg, q, qp2);
 }
 
-PL_SIG (SV, D, 1, tanh, -10.0, 10.0)
-PL_TEST_ULP (SV_NAME_D1 (tanh), 2.27)
-PL_TEST_DISABLE_FENV (SV_NAME_D1 (tanh))
-PL_TEST_SYM_INTERVAL (SV_NAME_D1 (tanh), 0, 0x1p-27, 5000)
-PL_TEST_SYM_INTERVAL (SV_NAME_D1 (tanh), 0x1p-27, 0x1.241bf835f9d5fp+4, 50000)
-PL_TEST_SYM_INTERVAL (SV_NAME_D1 (tanh), 0x1.241bf835f9d5fp+4, inf, 1000)
+TEST_SIG (SV, D, 1, tanh, -10.0, 10.0)
+TEST_ULP (SV_NAME_D1 (tanh), 2.27)
+TEST_DISABLE_FENV (SV_NAME_D1 (tanh))
+TEST_SYM_INTERVAL (SV_NAME_D1 (tanh), 0, 0x1p-27, 5000)
+TEST_SYM_INTERVAL (SV_NAME_D1 (tanh), 0x1p-27, 0x1.241bf835f9d5fp+4, 50000)
+TEST_SYM_INTERVAL (SV_NAME_D1 (tanh), 0x1.241bf835f9d5fp+4, inf, 1000)

@@ -6,8 +6,8 @@
  */
 
 #include "sv_math.h"
-#include "pl_sig.h"
-#include "pl_test.h"
+#include "test_sig.h"
+#include "test_defs.h"
 
 static const struct data
 {
@@ -43,10 +43,10 @@ svfloat64_t SV_NAME_D2 (hypot) (svfloat64_t x, svfloat64_t y, svbool_t pg)
   return svsqrt_x (pg, sqsum);
 }
 
-PL_SIG (SV, D, 2, hypot, -10.0, 10.0)
-PL_TEST_ULP (SV_NAME_D2 (hypot), 0.71)
-PL_TEST_DISABLE_FENV (SV_NAME_D2 (hypot))
-PL_TEST_INTERVAL2 (SV_NAME_D2 (hypot), 0, inf, 0, inf, 10000)
-PL_TEST_INTERVAL2 (SV_NAME_D2 (hypot), 0, inf, -0, -inf, 10000)
-PL_TEST_INTERVAL2 (SV_NAME_D2 (hypot), -0, -inf, 0, inf, 10000)
-PL_TEST_INTERVAL2 (SV_NAME_D2 (hypot), -0, -inf, -0, -inf, 10000)
+TEST_SIG (SV, D, 2, hypot, -10.0, 10.0)
+TEST_ULP (SV_NAME_D2 (hypot), 0.71)
+TEST_DISABLE_FENV (SV_NAME_D2 (hypot))
+TEST_INTERVAL2 (SV_NAME_D2 (hypot), 0, inf, 0, inf, 10000)
+TEST_INTERVAL2 (SV_NAME_D2 (hypot), 0, inf, -0, -inf, 10000)
+TEST_INTERVAL2 (SV_NAME_D2 (hypot), -0, -inf, 0, inf, 10000)
+TEST_INTERVAL2 (SV_NAME_D2 (hypot), -0, -inf, -0, -inf, 10000)
